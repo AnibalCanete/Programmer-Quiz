@@ -1,35 +1,50 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+
+import { useGlobalContext } from "./utils/context";
+import ConfigurationForm from "./components/ConfigurationForm";
+import Loading from "./components/Loading";
+import Modal from "./components/Modal";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { wait, loading, questions, index, correct, nextQuestion, checkResponse } = useGlobalContext();
+
+  if (wait) {
+    return <ConfigurationForm />;
+  }
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  const { Question, IncorrectAnswers, CorrectAnswer } = questions[index];
+  let answers = [ ...IncorrectAnswers];
+  const indexTemporal = Math.floor(Math.random() * 4);
+
+  if (indexTemporal === 3) {
+    answers.push(CorrectAnswer);
+  } else {
+    answers.push(answers[indexTemporal]);
+    answers[indexTemporal] = CorrectAnswer;
+  }
+
+  const escapeHTML = (str) => str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <main>
+      <Modal />
+      <section className="quiz">
+        <p className="corrects-answers">Correct Answers : {correct}/{index}</p>
+        <article className="container">
+          <h2 dangerouslySetInnerHTML={{ __html: escapeHTML(Question) }}></h2>
+          <div className="button-container">
+            {answers.map((answer, index) => {
+              return (<button key={index} className="answer-button" onClick={() => checkResponse(CorrectAnswer === answer)} dangerouslySetInnerHTML={{ __html: escapeHTML(answer) }}></button>)
+            })}
+          </div>
+        </article>
+        <button className="next-question" onClick={nextQuestion}>Next Question</button>
+      </section>
+    </main>
+  );
+};
 
-export default App
+export default App;
